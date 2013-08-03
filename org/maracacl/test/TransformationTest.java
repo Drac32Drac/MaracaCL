@@ -9,7 +9,6 @@
 package org.maracacl.test;
 
 import java.nio.FloatBuffer;
-import java.nio.IntBuffer;
 import org.maracacl.scene.*;
 import org.maracacl.geometry.vector.*;
 import org.maracacl.geometry.*;
@@ -18,16 +17,12 @@ import org.maracacl.render.gl11.Color3f;
 import java.util.*;
 import org.lwjgl.LWJGLException;
 import org.lwjgl.opengl.*;
-import org.lwjgl.util.vector.Vector3f;
-import java.util.concurrent.locks.*;
-import org.lwjgl.BufferUtils;
+import org.lwjgl.*;
 
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL12.*;
 import static org.lwjgl.util.glu.GLU.*;
-import org.maracacl.render.IBO;
-import org.maracacl.render.VBO;
-import org.maracacl.render.VBOIBOPair;
+import org.maracacl.render.*;
 import org.maracacl.util.FrameTimer;
  
 /*************************** TransformationTest **************************
@@ -48,6 +43,11 @@ public class TransformationTest
     VBOIBOPair pyramidVBO;
     
     FrameTimer fTimer = new FrameTimer(8);
+    
+    PointDiffuseLight light;
+    PointDiffuseLight redLight;
+    PointDiffuseLight blueLight;
+    PointDiffuseLight yellowLight;
     
     Vector3 farCenter = new Vector3(0.0f, 0.0f, -camFarDistance);
     Vector3 nearCenter = new Vector3(0.0f, 0.0f, -camNearDistance);
@@ -159,13 +159,11 @@ public class TransformationTest
         float width = (float)Display.getWidth();
         float height = (float)Display.getHeight();
 
-        glShadeModel(GL_SMOOTH);
-
         glEnable(GL_COLOR_MATERIAL);
         glEnable(GL_DEPTH_TEST);
-        // glEnable(GL_CULL_FACE);
+        glEnable(GL_CULL_FACE);
         glEnable(GL_RESCALE_NORMAL);
-                
+        
         glEnableClientState(GL_VERTEX_ARRAY);
         glEnableClientState(GL_NORMAL_ARRAY);
         // glEnableClientState(GL_COLOR_ARRAY);
@@ -174,20 +172,39 @@ public class TransformationTest
         // set up lighting
         glEnable(GL_LIGHTING);
         glEnable(GL_LIGHT0);
+        glEnable(GL_LIGHT1);
+        glEnable(GL_LIGHT2);
+        glEnable(GL_LIGHT3);
+        glShadeModel(GL_SMOOTH);
+        
+        // glMaterial(GL_FRONT, GL_SPECULAR, floatBuffer(1f, 1f, 1f, 1.0f) );
+        // glMaterialf(GL_FRONT, GL_SHININESS, 25.0f);
+        
+        light = new PointDiffuseLight(GL_LIGHT0);
+        light.setDiffuse( new Vector4( 1f, 1f, 1f, 1.0f) );
+        light.setPosition( new Vector3( 0.0f, -0.0f, -5.5f ) );
+        glLightf(GL_LIGHT0, GL_CONSTANT_ATTENUATION, 1f);
+        glLightf(GL_LIGHT0, GL_LINEAR_ATTENUATION, 0.15f);
+        glLightf(GL_LIGHT0, GL_QUADRATIC_ATTENUATION, 0.05f);
+        
+        redLight = new PointDiffuseLight(GL_LIGHT1);
+        redLight.setDiffuse( new Vector4( 1f, 0f, 0f, 1.0f) );
+        redLight.setPosition( new Vector3( 1.5f, -1.5f, -7.5f ) );
+        glLightf(GL_LIGHT1, GL_CONSTANT_ATTENUATION, 1f);
+        glLightf(GL_LIGHT1, GL_LINEAR_ATTENUATION, 0.5f);
+        glLightf(GL_LIGHT1, GL_QUADRATIC_ATTENUATION, 0.05f);
+        
+        blueLight = new PointDiffuseLight(GL_LIGHT2);
+        blueLight.setDiffuse( new Vector4( 0f, 0f, 1f, 1.0f) );
+        blueLight.setPosition( new Vector3( -1.5f, -1.5f, -7.5f ) );
+        glLightf(GL_LIGHT2, GL_CONSTANT_ATTENUATION, 1f);
+        glLightf(GL_LIGHT2, GL_LINEAR_ATTENUATION, 0.5f);
+        glLightf(GL_LIGHT2, GL_QUADRATIC_ATTENUATION, 0.05f);
+        
+        glLight(GL_LIGHT3, GL_AMBIENT, floatBuffer(0.025f, 0.025f, 0.025f, 1.0f));
         
         
-        glMaterial(GL_FRONT, GL_SPECULAR, floatBuffer(1f, 1f, 1f, 1.0f) );
-        glMaterialf(GL_FRONT, GL_SHININESS, 25.0f);
-
-        glLight(GL_LIGHT0, GL_POSITION, lightPosition );
-
-        glLight(GL_LIGHT0, GL_SPECULAR, floatBuffer(0.95f, 0.95f, 0.95f, 1.0f) );
-        glLight(GL_LIGHT0, GL_DIFFUSE, floatBuffer(0.95f, 0.95f, 0.95f, 1.0f) );
-
-        glLightModel(GL_LIGHT_MODEL_AMBIENT, floatBuffer(0.05f, 0.05f, 0.05f, 1.0f) );
-        glLightf(GL_LIGHT0, GL_QUADRATIC_ATTENUATION, 0.5f);
-        
-        nodes = generateNodeBox(15, 15, 15);
+        nodes = generateNodeBox(10, 10, 10);
     }
     
     public void TransformScene()
@@ -220,13 +237,11 @@ public class TransformationTest
 
     public void DrawGLScene()
     {
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);       //Clear The Screen And The Depth Buffer
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         
-        glLoadIdentity();
-        glLight(GL_LIGHT0, GL_POSITION, lightPosition );
-        // glLightf(GL_LIGHT0, GL_CONSTANT_ATTENUATION, 1f);
-        // glLightf(GL_LIGHT0, GL_LINEAR_ATTENUATION, 1f);
-        glLightf(GL_LIGHT0, GL_QUADRATIC_ATTENUATION, 0.75f);
+        light.applyState();
+        redLight.applyState();
+        blueLight.applyState();
         
         List<ITransformationNode> children = nodes.getChildren();
         

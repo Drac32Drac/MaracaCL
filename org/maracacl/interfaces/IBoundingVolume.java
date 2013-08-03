@@ -10,6 +10,7 @@ package org.maracacl.interfaces;
 
 import org.maracacl.geometry.Plane;
 import org.maracacl.geometry.Sphere;
+import org.maracacl.geometry.vector.Transformation;
 import org.maracacl.geometry.vector.Vector3;
 
 /****************************** IBoundingVolume ****************************
@@ -24,4 +25,9 @@ public interface IBoundingVolume
     public boolean intersects(Plane plane);
     public boolean intersects(Sphere sphere);
     public boolean intersects(Vector3 point);
+    
+    public float getSurfaceArea();
+    public float getVolume();
+    
+    public IBoundingVolume transform( Transformation transformation );
 }

@@ -9,11 +9,12 @@
 package org.maracacl.geometry;
 
 import org.maracacl.geometry.vector.Vector3;
+import org.maracacl.interfaces.IBoundingVolume;
 
 /*************************** AABB **************************
  *
  */
-public final class AABB
+public final class AABB // implements IBoundingVolume
 {
     final Vector3 CenterPoint;
     final Vector3 HalfWidths;
@@ -45,5 +46,20 @@ public final class AABB
         if ( Math.abs( CenterPoint.z - otherAABB.CenterPoint.z) >
                 (HalfWidths.z + otherAABB.HalfWidths.z) ) return false;
         return true;
+    }
+    
+    /************************* Geometric Calculations *************************/
+    // @Override
+    public float getSurfaceArea()
+    {
+        float area14 = HalfWidths.x * HalfWidths.y;
+        float area25 = HalfWidths.y * HalfWidths.z;
+        float area36 = HalfWidths.x * HalfWidths.z;
+        return (area14 + area25 + area36) * 4f;
+    }
+    // @Override
+    public float getVolume()
+    {
+        return HalfWidths.x * HalfWidths.y * HalfWidths.z * 8f;
     }
 }
