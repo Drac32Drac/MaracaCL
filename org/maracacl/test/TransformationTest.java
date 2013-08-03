@@ -28,6 +28,7 @@ import static org.lwjgl.util.glu.GLU.*;
 import org.maracacl.render.IBO;
 import org.maracacl.render.VBO;
 import org.maracacl.render.VBOIBOPair;
+import org.maracacl.util.FrameTimer;
  
 /*************************** TransformationTest **************************
  *
@@ -45,6 +46,8 @@ public class TransformationTest
     
     FloatBuffer lightPosition = floatBuffer(5.0f, 5.0f, -5.0f, 0.0f);
     VBOIBOPair pyramidVBO;
+    
+    FrameTimer fTimer = new FrameTimer(8);
     
     Vector3 farCenter = new Vector3(0.0f, 0.0f, -camFarDistance);
     Vector3 nearCenter = new Vector3(0.0f, 0.0f, -camNearDistance);
@@ -119,12 +122,9 @@ public class TransformationTest
         
         reshape(Display.getWidth(), Display.getHeight());
         
-        long oldTime = System.currentTimeMillis();
-        float oldFPS = 1.0f;
-        float newFPS = 1.0f;
-        
 	while (!Display.isCloseRequested())
         {
+            fTimer.tick();
 	    // transform the scene
             TransformScene();
 	    	
@@ -133,12 +133,8 @@ public class TransformationTest
             
 	    Display.update();
             
-            long currentTime = System.currentTimeMillis();
-            newFPS = 1.0f / ((float)(currentTime - oldTime) / 1000f);
-            newFPS = oldFPS * 0.8f + newFPS * 0.2f;
-            System.out.println( "FPS = " + String.format("%.1f", newFPS) );
-            oldTime = currentTime;
-            oldFPS = newFPS;
+            System.out.println( "FPS = " + String.format( 
+                    "%.1f", fTimer.getFPS() ) );
 	}
  
 	// Display.destroy();
@@ -191,12 +187,12 @@ public class TransformationTest
         glLightModel(GL_LIGHT_MODEL_AMBIENT, floatBuffer(0.05f, 0.05f, 0.05f, 1.0f) );
         glLightf(GL_LIGHT0, GL_QUADRATIC_ATTENUATION, 0.5f);
         
-        nodes = generateNodeBox(10, 10, 10);
+        nodes = generateNodeBox(15, 15, 15);
     }
     
     public void TransformScene()
     {
-        step += 0.05f;
+        step += fTimer.getDelta() * 2.5f;
         // step *= Math.PI / 1000f;
         // if (step > 100.0f)
         //    step -= 100.0f;
@@ -230,7 +226,7 @@ public class TransformationTest
         glLight(GL_LIGHT0, GL_POSITION, lightPosition );
         // glLightf(GL_LIGHT0, GL_CONSTANT_ATTENUATION, 1f);
         // glLightf(GL_LIGHT0, GL_LINEAR_ATTENUATION, 1f);
-        glLightf(GL_LIGHT0, GL_QUADRATIC_ATTENUATION, 0.25f);
+        glLightf(GL_LIGHT0, GL_QUADRATIC_ATTENUATION, 0.75f);
         
         List<ITransformationNode> children = nodes.getChildren();
         
