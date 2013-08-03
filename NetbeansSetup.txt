@@ -1,0 +1,39 @@
+To set up MaracaCL in NetBeans, follow these steps.
+
+1.) Download LWJGL from www.lwjgl.org.  The current development has taken place
+    with version 2.9.0, so that is the recommended version at this time.  Note,
+    it may be desirable to download some of the extra packages such as docs,
+    source, and applet.
+
+2.) Create a new java application project for use with MaracaCL.  Do not have 
+    NetBeans create a main class for you.
+
+3.) Initialize Git from Team/Git/Initialize.  Set the git directory to be the src
+    directory in the newly created project.
+
+4.) Perform a Git Pull.  While the Source Packages folder is selected, select
+    Team/Git/Remote/Pull.  Specify a remote name of your choice and select
+    Specify Git Repository Location, and provide
+    https://github.com/Drac32Drac/MaracaCL.git/ as the repository.  Provide
+    your git hub credentials below that and press Next.
+
+5.) Setup LWJGL libs.  A handy tutorial to setup the LWJGL libraries can be found
+    at http://lwjgl.org/wiki/index.php?title=Setting_Up_LWJGL_with_NetBeans
+    After getting the libraries setup in NetBeans, the new project needs the
+    libraries applied.  In your project tree, right click Libraries, click Add
+    Library, and choose your newly setup LWJGL Library.  The click Add Library.
+
+6.) Finally, to actually run the test code from NetBeans, the project needs to
+    know where the LWJGL natives are.  Right click the project and select
+    properties.  Select Run and in the VM Options text box, type in
+    -Djava.library.path=<lwjglPath>/lwjgl-2.9.0/native/<os>
+    Replace <lwjglPath> with the path to your LWJGL folder and replace <os>
+    with the operating system you are using (i.e. windows, linux, macosx).
+
+7.) The project should be setup and ready to go.  You can find test apps in
+    org.maracacl.test.  The project should now be capable of compiling and
+    running MaracaCL with full GitHub integration.
+
+* Note, steps 3 and 4 can be replaced with a manual copy of MaracaCL from GitHub
+    to the project's src folder.  The result is identical but without GitHub
+    integration.
