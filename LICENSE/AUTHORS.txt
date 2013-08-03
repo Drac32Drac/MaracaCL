@@ -1,0 +1,11 @@
+The following people have contributed to the MaracaCL project.
+
+	* Adam Wilkes
+
+MaracaCL Uses or Depends on the following porjects.
+
+	* LWJGL  - http://www.lwjgl.org/
+	* OpenGL - http://www.opengl.org/
+	* OpenCL - http://www.khronos.org/opencl/
+
+All trademarks and registered trademarks are the property of their respective owners.
