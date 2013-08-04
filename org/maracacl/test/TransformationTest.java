@@ -44,10 +44,10 @@ public class TransformationTest
     
     FrameTimer fTimer = new FrameTimer(8);
     
-    PointDiffuseLight light;
-    PointDiffuseLight redLight;
-    PointDiffuseLight blueLight;
-    PointDiffuseLight yellowLight;
+    PointLight light;
+    PointLight redLight;
+    PointLight blueLight;
+    PointLight yellowLight;
     
     Vector3 farCenter = new Vector3(0.0f, 0.0f, -camFarDistance);
     Vector3 nearCenter = new Vector3(0.0f, 0.0f, -camNearDistance);
@@ -174,51 +174,58 @@ public class TransformationTest
         glEnable(GL_LIGHT0);
         glEnable(GL_LIGHT1);
         glEnable(GL_LIGHT2);
-        glEnable(GL_LIGHT3);
+        // glEnable(GL_LIGHT3);
         glShadeModel(GL_SMOOTH);
         
-        // glMaterial(GL_FRONT, GL_SPECULAR, floatBuffer(1f, 1f, 1f, 1.0f) );
-        // glMaterialf(GL_FRONT, GL_SHININESS, 25.0f);
+        glMaterial(GL_FRONT, GL_SPECULAR, floatBuffer(0.9f, 0.9f, 0.9f, 1.0f) );
+        glMaterialf(GL_FRONT, GL_SHININESS, 5.0f);
+        // glMaterial( GL_FRONT, GL_EMISSION, floatBuffer(0.05f, 0.05f, 0.05f, 1.0f) );
         
-        light = new PointDiffuseLight(GL_LIGHT0);
-        light.setDiffuse( new Vector4( 1f, 1f, 1f, 1.0f) );
-        light.setPosition( new Vector3( 0.0f, -0.0f, -5.5f ) );
+        light = new PointLight(GL_LIGHT0);
+        light.setDiffuse( new Vector4( 1.5f, 1.5f, 1.5f, 1.0f) );
+        light.setSpecular( new Vector4(1f, 1f, 1f, 1.0f) );
+        light.setAmbient( new Vector4(0.05f, 0.05f, 0.05f, 1.0f) );
+        light.setPosition( new Vector3( 0.0f, 0.0f, -7.5f ) );
+        
         glLightf(GL_LIGHT0, GL_CONSTANT_ATTENUATION, 1f);
         glLightf(GL_LIGHT0, GL_LINEAR_ATTENUATION, 0.15f);
-        glLightf(GL_LIGHT0, GL_QUADRATIC_ATTENUATION, 0.05f);
+        glLightf(GL_LIGHT0, GL_QUADRATIC_ATTENUATION, 0.01f);
         
-        redLight = new PointDiffuseLight(GL_LIGHT1);
-        redLight.setDiffuse( new Vector4( 1f, 0f, 0f, 1.0f) );
-        redLight.setPosition( new Vector3( 1.5f, -1.5f, -7.5f ) );
+        redLight = new PointLight(GL_LIGHT1);
+        redLight.setDiffuse( new Vector4( 2f, 0.25f, 0.25f, 1.0f) );
+        redLight.setSpecular( new Vector4(2f, 1.0f, 1.0f, 1.0f) );
+        redLight.setAmbient( new Vector4(0.05f, 0.05f, 0.05f, 1.0f) );
+        redLight.setPosition( new Vector3( 3.5f, -2.5f, -10.5f ) );
         glLightf(GL_LIGHT1, GL_CONSTANT_ATTENUATION, 1f);
-        glLightf(GL_LIGHT1, GL_LINEAR_ATTENUATION, 0.5f);
-        glLightf(GL_LIGHT1, GL_QUADRATIC_ATTENUATION, 0.05f);
+        glLightf(GL_LIGHT1, GL_LINEAR_ATTENUATION, 0.15f);
+        glLightf(GL_LIGHT1, GL_QUADRATIC_ATTENUATION, 0.01f);
         
-        blueLight = new PointDiffuseLight(GL_LIGHT2);
-        blueLight.setDiffuse( new Vector4( 0f, 0f, 1f, 1.0f) );
-        blueLight.setPosition( new Vector3( -1.5f, -1.5f, -7.5f ) );
+        blueLight = new PointLight(GL_LIGHT2);
+        blueLight.setDiffuse( new Vector4( 0.25f, 0.25f, 2f, 1.0f) );
+        blueLight.setSpecular( new Vector4(1f, 1f, 1f, 1.0f) );
+        blueLight.setAmbient( new Vector4(0.05f, 0.05f, 0.05f, 1.0f) );
+        blueLight.setPosition( new Vector3( -3.5f, -1.5f, -10.5f ) );
         glLightf(GL_LIGHT2, GL_CONSTANT_ATTENUATION, 1f);
-        glLightf(GL_LIGHT2, GL_LINEAR_ATTENUATION, 0.5f);
-        glLightf(GL_LIGHT2, GL_QUADRATIC_ATTENUATION, 0.05f);
+        glLightf(GL_LIGHT2, GL_LINEAR_ATTENUATION, 0.15f);
+        glLightf(GL_LIGHT2, GL_QUADRATIC_ATTENUATION, 0.01f);
         
-        glLight(GL_LIGHT3, GL_AMBIENT, floatBuffer(0.025f, 0.025f, 0.025f, 1.0f));
+        // glLight(GL_LIGHT3, GL_AMBIENT, floatBuffer(0.025f, 0.025f, 0.025f, 1.0f));
         
         
-        nodes = generateNodeBox(10, 10, 10);
+        glEnable(GL_FOG);
+        glFogi (GL_FOG_MODE, GL_EXP2);
+        glFogf (GL_FOG_DENSITY, 0.12f);
+        glFogf(GL_FOG_START, camFarDistance * 0.75f);
+        glFogf(GL_FOG_END, camFarDistance);
+        glHint (GL_FOG_HINT, GL_NICEST);
+        
+        nodes = generateNodeBox(10, 10, 50);
     }
     
     public void TransformScene()
     {
         step += fTimer.getDelta() * 2.5f;
-        // step *= Math.PI / 1000f;
-        // if (step > 100.0f)
-        //    step -= 100.0f;
-        
-        // rtri = (float)Math.System.currentTimeMillis() * 4000f;
-        rtri = step * 10f;
-        rquad += 0.0025f;
-        if (rtri > FastTrig.PI)
-            rtri -= FastTrig.PI * 2.0f;
+        rtri = step * 15f;
         
         pyramidPosX = (float)Math.sin(step) * 1.5f;
         pyramidPosY = -(float)Math.cos(step*0.5f) * 1.5f;
