@@ -132,7 +132,8 @@ public class Quaternion
         resultAngle = 2.0f * FastTrig.ACos(w);
         // resultAngle = 2.0f * (float)Math.acos(w);
         if ( ( resultAngle < Epsilon && resultAngle > -Epsilon ) ||
-                ( resultAngle - Math.PI < Epsilon && resultAngle - Math.PI > - Epsilon ) )
+                ( resultAngle - Math.PI < Epsilon && resultAngle - Math.PI > - Epsilon ) ||
+                ( resultAngle + Math.PI < Epsilon && resultAngle + Math.PI > - Epsilon ) )
         {   // fix degenerate angle singularities at 0 and PI by using vertical axis
             resultX = 0.0f;
             resultY = 1.0f;

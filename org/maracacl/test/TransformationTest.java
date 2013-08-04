@@ -174,42 +174,42 @@ public class TransformationTest
         glEnable(GL_LIGHT0);
         glEnable(GL_LIGHT1);
         glEnable(GL_LIGHT2);
-        // glEnable(GL_LIGHT3);
+        glEnable(GL_LIGHT3);
         glShadeModel(GL_SMOOTH);
         
         glMaterial(GL_FRONT, GL_SPECULAR, floatBuffer(0.9f, 0.9f, 0.9f, 1.0f) );
         glMaterialf(GL_FRONT, GL_SHININESS, 5.0f);
         // glMaterial( GL_FRONT, GL_EMISSION, floatBuffer(0.05f, 0.05f, 0.05f, 1.0f) );
         
-        light = new PointLight(GL_LIGHT0);
+        light = new PointLight(GL_LIGHT1);
         light.setDiffuse( new Vector4( 1.5f, 1.5f, 1.5f, 1.0f) );
         light.setSpecular( new Vector4(1f, 1f, 1f, 1.0f) );
         light.setAmbient( new Vector4(0.05f, 0.05f, 0.05f, 1.0f) );
         light.setPosition( new Vector3( 0.0f, 0.0f, -7.5f ) );
         
-        glLightf(GL_LIGHT0, GL_CONSTANT_ATTENUATION, 1f);
-        glLightf(GL_LIGHT0, GL_LINEAR_ATTENUATION, 0.15f);
-        glLightf(GL_LIGHT0, GL_QUADRATIC_ATTENUATION, 0.01f);
-        
-        redLight = new PointLight(GL_LIGHT1);
-        redLight.setDiffuse( new Vector4( 2f, 0.25f, 0.25f, 1.0f) );
-        redLight.setSpecular( new Vector4(2f, 1.0f, 1.0f, 1.0f) );
-        redLight.setAmbient( new Vector4(0.05f, 0.05f, 0.05f, 1.0f) );
-        redLight.setPosition( new Vector3( 3.5f, -2.5f, -10.5f ) );
         glLightf(GL_LIGHT1, GL_CONSTANT_ATTENUATION, 1f);
         glLightf(GL_LIGHT1, GL_LINEAR_ATTENUATION, 0.15f);
         glLightf(GL_LIGHT1, GL_QUADRATIC_ATTENUATION, 0.01f);
         
-        blueLight = new PointLight(GL_LIGHT2);
-        blueLight.setDiffuse( new Vector4( 0.25f, 0.25f, 2f, 1.0f) );
-        blueLight.setSpecular( new Vector4(1f, 1f, 1f, 1.0f) );
-        blueLight.setAmbient( new Vector4(0.05f, 0.05f, 0.05f, 1.0f) );
-        blueLight.setPosition( new Vector3( -3.5f, -1.5f, -10.5f ) );
+        redLight = new PointLight(GL_LIGHT2);
+        redLight.setDiffuse( new Vector4( 2f, 0.25f, 0.25f, 1.0f) );
+        redLight.setSpecular( new Vector4(2f, 1.0f, 1.0f, 1.0f) );
+        redLight.setAmbient( new Vector4(0.05f, 0.05f, 0.05f, 1.0f) );
+        redLight.setPosition( new Vector3( 3.5f, -2.5f, -10.5f ) );
         glLightf(GL_LIGHT2, GL_CONSTANT_ATTENUATION, 1f);
         glLightf(GL_LIGHT2, GL_LINEAR_ATTENUATION, 0.15f);
         glLightf(GL_LIGHT2, GL_QUADRATIC_ATTENUATION, 0.01f);
         
-        // glLight(GL_LIGHT3, GL_AMBIENT, floatBuffer(0.025f, 0.025f, 0.025f, 1.0f));
+        blueLight = new PointLight(GL_LIGHT3);
+        blueLight.setDiffuse( new Vector4( 0.25f, 0.25f, 2f, 1.0f) );
+        blueLight.setSpecular( new Vector4(1f, 1f, 1f, 1.0f) );
+        blueLight.setAmbient( new Vector4(0.05f, 0.05f, 0.05f, 1.0f) );
+        blueLight.setPosition( new Vector3( -3.5f, -1.5f, -10.5f ) );
+        glLightf(GL_LIGHT3, GL_CONSTANT_ATTENUATION, 1f);
+        glLightf(GL_LIGHT3, GL_LINEAR_ATTENUATION, 0.15f);
+        glLightf(GL_LIGHT3, GL_QUADRATIC_ATTENUATION, 0.01f);
+        
+        glLight(GL_LIGHT0, GL_AMBIENT, floatBuffer(0.025f, 0.025f, 0.025f, 1.0f));
         
         
         glEnable(GL_FOG);
@@ -219,12 +219,12 @@ public class TransformationTest
         glFogf(GL_FOG_END, camFarDistance);
         glHint (GL_FOG_HINT, GL_NICEST);
         
-        nodes = generateNodeBox(10, 10, 50);
+        nodes = generateNodeBox(15, 15, 15);
     }
     
     public void TransformScene()
     {
-        step += fTimer.getDelta() * 2.5f;
+        step += fTimer.getDelta() * 0.5f;
         rtri = step * 15f;
         
         pyramidPosX = (float)Math.sin(step) * 1.5f;
