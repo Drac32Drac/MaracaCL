@@ -142,13 +142,13 @@ public class TransformationTest
         System.out.println("Width : "+width+" Height: "+height);
         if(height==0)height=1;
         AspectRatio = (float)width/(float)height;
-        glViewport(0, 0, width, height);                        // Reset The Current Viewport And Perspective Transformation
-        glMatrixMode(GL_PROJECTION);                            // Select The Projection Matrix
-        glLoadIdentity();                                       // Reset The Projection Matrix
+        glViewport(0, 0, width, height);    
+        glMatrixMode(GL_PROJECTION);                 
+        glLoadIdentity();                                    
         gluPerspective(FoV, width / height,
-                camNearDistance, camFarDistance);    // Calculate The Aspect Ratio Of The Window
-        glMatrixMode(GL_MODELVIEW);                             // Select The Modelview Matrix
-        glLoadIdentity();                                       // Reset The ModalView Matrix
+                camNearDistance, camFarDistance);  
+        glMatrixMode(GL_MODELVIEW);                  
+        glLoadIdentity();                        
     }
     
     public void init()
@@ -220,9 +220,9 @@ public class TransformationTest
         
         nodes = new TransformationNode(null);
         
-        ITransformationNode node = generateNodeBox(10, 5, 5);
+        ITransformationNode node = generateNodeBox(5, 10, 5);
         node.setParent(nodes);
-        node = generateNodeBox(10, 5, 5);
+        node = generateNodeBox(5, 10, 5);
         node.setParent(nodes);
     }
     
