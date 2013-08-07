@@ -23,5 +23,8 @@ import org.maracacl.geometry.AABB;
  */
 public interface ICollidable extends ITransformable
 {
-    public AABB             generateAABB();
+    public void             setBoundingVolume( IBoundingVolume volume );
+    public IBoundingVolume  getBoundingVolume();
+    
+    // public AABB             generateAABB();
 }

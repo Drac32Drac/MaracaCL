@@ -83,6 +83,11 @@ public final class Vector3
         return new Vector3(x/len, y/len, z/len);
     }
     
+    public static Vector3 midpoint(Vector3 left, Vector3 right)
+    {
+        return left.add(right).scale(0.5f);
+    }
+    
     public static float dot(Vector3 left, Vector3 right)
     {
         return left.x * right.x + left.y * right.y + left.z * right.z;
@@ -109,6 +114,19 @@ public final class Vector3
                               resultZ*rotation.w - resultY*rotation.x
                             + resultX*rotation.y - resultW*rotation.z );
     }
+     
+    public Vector3 scale(float scale)
+    {
+        return new Vector3(x*scale, y*scale, z*scale);
+    }
+    public Vector3 scale(Vector3 scale)
+    {
+        return new Vector3(x*scale.x, y*scale.y, z*scale.z);
+    }
+    public Vector3 scale(float scaleX, float scaleY, float scaleZ)
+    {
+        return new Vector3(x*scaleX, y*scaleY, z*scaleZ);
+    }
     
     public static float angle(Vector3 a, Vector3 b)
     {
@@ -126,11 +144,6 @@ public final class Vector3
         float Y = buf.get();
         float Z = buf.get();
         return new Vector3(X, Y, Z);
-    }
-    
-    public Vector3 scale(float scale)
-    {
-        return new Vector3(x*scale, y*scale, z*scale);
     }
     
     public void storeToBuffer(FloatBuffer buf)

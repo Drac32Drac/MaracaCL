@@ -9,11 +9,13 @@
 package org.maracacl.interfaces;
 
 import java.util.List;
+import org.maracacl.geometry.AABB;
 import org.maracacl.geometry.vector.AxisAngle;
 import org.maracacl.geometry.vector.EulerAngle;
 import org.maracacl.geometry.vector.Quaternion;
 import org.maracacl.geometry.vector.Transformation;
 import org.maracacl.geometry.vector.Vector3;
+import org.maracacl.scene.OctreeNode;
 
 /****************************** ITransformationNode ****************************
  *
@@ -66,5 +68,9 @@ public interface ITransformationNode
             Vector3 translation, float scaleAmount );
     
     public void                         recursiveTransform( );
-    public void                         recursiveChildTransform ();
+    public void                         recursiveChildTransform (
+            Transformation transformation);
+    
+    public OctreeNode                   toOctree( AABB sceneExtents );
+    public void                         toOctree( OctreeNode node );
 }

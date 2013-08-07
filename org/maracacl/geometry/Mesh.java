@@ -84,6 +84,94 @@ public class Mesh
     
     public IBoundingVolume generateBoundingSphere()
     {
+        Vector3 C;                            // Center of ball
+        float rad, rad2;                    // radius and radius squared
+        float xmin, xmax, ymin, ymax, zmin, zmax;       // bounding box extremes
+        int   Pxmin, Pxmax, Pymin, Pymax, Pzmin, Pzmax;   // index of  P[] at box extreme
+
+        List<Vertex> points = new ArrayList<>();
+        for (Face f : faces)
+        {
+            for (Vertex v : f.vertices)
+            {
+                points.add(v);
+            }
+        }
+        
+        // find a large diameter to start with
+        // first get the bounding box and P[] extreme points for it
+        xmin = xmax = points.get(0).position.x;
+        ymin = ymax = points.get(0).position.y;
+        zmin = zmax = points.get(0).position.z;
+        Pxmin = Pxmax = Pymin = Pymax = Pzmin = Pzmax = 0;
+        for ( int i = 1; i < points.size(); i++ ) {
+            if (points.get(i).position.x < xmin) {
+                xmin = points.get(i).position.x;
+                Pxmin = i;
+            }
+            else if (points.get(i).position.x > xmax) {
+                xmax = points.get(i).position.x;
+                Pxmax = i;
+            }
+            if (points.get(i).position.y < ymin) {
+                ymin = points.get(i).position.y;
+                Pymin = i;
+            }
+            else if (points.get(i).position.y > ymax) {
+                ymax = points.get(i).position.y;
+                Pymax = i;
+            }
+            if (points.get(i).position.z < zmin) {
+                zmin = points.get(i).position.z;
+                Pzmin = i;
+            }
+            else if (points.get(i).position.z > zmax) {
+                zmax = points.get(i).position.z;
+                Pzmax = i;
+            }
+        }
+        // select the largest extent as an initial diameter for the  ball
+        Vector3 dPx = points.get(Pxmax).position.subtract( points.get(Pxmin).position ); // diff of Px max and min
+        Vector3 dPy = points.get(Pymax).position.subtract( points.get(Pymin).position ); // diff of Py max and min
+        Vector3 dPz = points.get(Pzmax).position.subtract( points.get(Pzmin).position );
+        float dx2 = Vector3.dot(dPx, dPx); // Px diff squared
+        float dy2 = Vector3.dot(dPy, dPy); // Py diff squared
+        float dz2 = Vector3.dot(dPz, dPz);
+        if (dx2 >= dy2 && dx2 >= dz2) {                      // x direction is largest extent
+            C = points.get(Pxmin).position.add( dPx.scale(0.5f) );          // Center = midpoint of extremes
+            Vector3 dif = points.get(Pxmax).position.subtract( C );
+            rad2 = Vector3.dot( dif, dif );          // radius squared
+        }
+        else if (dy2 >= dz2) {                                 // y direction is largest extent
+            C = points.get(Pymin).position.add( dPy.scale(0.5f) );          // Center = midpoint of extremes
+            Vector3 dif = points.get(Pymax).position.subtract( C );
+            rad2 = Vector3.dot(dif, dif);          // radius squared
+        } else {
+            C = points.get(Pzmin).position.add( dPz.scale(0.5f) );          // Center = midpoint of extremes
+            Vector3 dif = points.get(Pzmax).position.subtract( C );
+            rad2 = Vector3.dot(dif, dif);
+        }
+            
+        rad = (float)Math.sqrt(rad2);
+
+        // now check that all points points.get(i] are in the ball
+        // and if not, expand the ball just enough to include them
+        Vector3 dP;
+        float dist, dist2;
+        for ( int i = 0; i < points.size(); i++ ) {
+            dP = points.get(i).position.subtract( C );
+            dist2 = Vector3.dot(dP, dP);
+            if (dist2 <= rad2)     // points.get(i] is inside the ball already
+                continue;
+            // points.get(i] not in ball, so expand ball  to include it
+            dist = (float)Math.sqrt(dist2);
+            rad = (rad + dist) * 0.5f;          // enlarge radius just enough
+            rad2 = rad * rad;
+            C = C.add( dP.scale( (dist-rad)/(dist) ) );    // shift Center toward points.get(i]
+        }
+        return new Sphere(C, rad);
+
+        /*
         AABB box = generateAABB();
         float radius = 0.0f;
         
@@ -97,7 +185,7 @@ public class Mesh
             }
         }
         
-        return new Sphere(box.CenterPoint, radius);
+        return new Sphere(box.CenterPoint, radius); */
     }
     
     public AABB generateAABB()

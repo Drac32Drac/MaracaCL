@@ -13,11 +13,8 @@ package org.maracacl.interfaces;
  * This interface defines a contract for an entity object that is to be considered
  * for graphical rendering.
  */
-public interface IRenderable extends ITransformable
+public interface IRenderable extends ITransformable, ICollidable
 {
-    public void             setBoundingVolume(IBoundingVolume volume);
-    public IBoundingVolume  getBoundingVolume();
-    
     public StatePrototype   getStatePrototype();
     public void             setStatePrototype(StatePrototype prototype);
     public void             applyStatePrototype();

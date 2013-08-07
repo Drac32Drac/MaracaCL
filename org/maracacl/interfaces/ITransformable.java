@@ -23,6 +23,8 @@ import org.maracacl.geometry.vector.Quaternion;
  */
 public interface ITransformable
 {
+    public void                 updateTransformation( Transformation trans );
+    
     public void                 setTransformationNode( ITransformationNode node );
     public ITransformationNode  getTransformationNode();
     
@@ -41,7 +43,5 @@ public interface ITransformable
     public void             setTranslation(Vector3 translation);
     public void             setScale(float scale);
     
-    //  Care should be taken with this method.  Some implementations cause a
-    // recursive transformation calculation.
     public void             applyTransformation();
 }

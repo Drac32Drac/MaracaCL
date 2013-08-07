@@ -18,6 +18,8 @@ import java.util.*;
 import java.util.concurrent.ForkJoinPool;
 import static java.util.concurrent.ForkJoinTask.invokeAll;
 import java.util.concurrent.RecursiveAction;
+import org.maracacl.geometry.AABB;
+import org.maracacl.util.StaticResources;
 
 /*************************** TransformationNodeCL **************************
  *
@@ -28,45 +30,44 @@ public final class TransformationNode implements ITransformationNode
     {
         private static final int    batchSize = 128;
         private TransformationNode  node;
-        private int min, max;
+        private int min, taskLength;
         
-        public RecursiveTransformTask(TransformationNode currentNode, int Min, int Max)
+        public RecursiveTransformTask(TransformationNode currentNode, int Min, int Length)
         {
             node = currentNode;
             min = Min;
-            max = Max;
+            taskLength = Length;
+            taskLength = Math.min( taskLength, node.getChildren().size() );
         }
         
         @Override
         public void compute()
         {
-            if (max - min > batchSize)
+            if (taskLength - min >= batchSize)
             {
-                int mid = (max + min) / 2;
-                invokeAll( new RecursiveTransformTask(node, min, mid),
-                        new RecursiveTransformTask(node, mid+1, max) );
+                int mid = (taskLength + min) / 2;
+                invokeAll( new RecursiveTransformTask( node, min, mid ),
+                        new RecursiveTransformTask( node, mid, taskLength ) );
             }
             else
             {
-                for (int i = min; i <= max; i++)
+                for (int i = min; i < taskLength; i++)
                 {
                     TransformationNode newNode = (TransformationNode)node.children.get(i);
-                    newNode.transform(node.getGlobalTransformation());
-                    if( !( newNode.children == null || 
-                            newNode.children.isEmpty() ) )
+                    newNode.transform( node.globalOrientation,
+                            node.globalPosition, node.globalScale );
+                    if( newNode.children != null && 
+                            !newNode.children.isEmpty() )
                     {
                         new RecursiveTransformTask( newNode,
-                            0, node.children.size() - 1 ).fork();
+                            0, newNode.children.size() ).invoke();
                     }
                 }
             }
         }
     }
     
-    private static ForkJoinPool     pool = new ForkJoinPool();
-    
-    private static final Object     countLock = new Object();
-    private static int              threadCount = 0;
+    // private static ForkJoinPool     pool = new ForkJoinPool();
     
     ITransformable                  entity;
     ITransformationNode             parent;
@@ -94,8 +95,10 @@ public final class TransformationNode implements ITransformationNode
         localOrientation = Quaternion.Identity;
         localScale = 1.0f;
         
-        globalOrientation = null;
-        globalPosition = null;
+        // globalOrientation = null;
+        // globalPosition = null;
+        globalOrientation = Quaternion.Identity;
+        globalPosition = Vector3.Zero;
         globalScale = 1.0f;
         
         if (parentNode != null)
@@ -166,6 +169,18 @@ public final class TransformationNode implements ITransformationNode
     public void setChildren(List<ITransformationNode> newList)
     {
         children = newList;
+    }
+    
+    public TransformationNode getNodeWithValidParent()
+    {
+        if ( parent.isGlobalValid() )
+        {
+            return this;
+        } else if ( parent == null )
+        {
+            return null;
+        }
+        return ((TransformationNode)parent).getNodeWithValidParent();
     }
     
     public Transformation getGlobalTransformation()
@@ -325,6 +340,12 @@ public final class TransformationNode implements ITransformationNode
         
         // set the current transformation as valid
         isGlobalValid = true;
+        
+        if ( entity != null )
+        {
+            entity.updateTransformation( new Transformation(globalOrientation,
+                    globalPosition, globalScale) );
+        }
     }
     @Override
     public void transform( Quaternion rotation, Vector3 translation, float scaleAmount )
@@ -362,6 +383,12 @@ public final class TransformationNode implements ITransformationNode
         
         // set the current transformation as valid
         isGlobalValid = true;
+        
+        if ( entity != null )
+        {
+            entity.updateTransformation( new Transformation(globalOrientation,
+                    globalPosition, globalScale) );
+        }
     }
     @Override
     public void recursiveTransform( )
@@ -381,9 +408,8 @@ public final class TransformationNode implements ITransformationNode
             }
         }
         
-        
-        RecursiveTransformTask task = new RecursiveTransformTask(this, 0, children.size() - 1);
-        pool.invoke(task);
+        RecursiveTransformTask task = new RecursiveTransformTask( this, 0, children.size() );
+        StaticResources.pool.invoke(task);
         
         /*
         if ( children == null )
@@ -395,16 +421,57 @@ public final class TransformationNode implements ITransformationNode
             child.recursiveChildTransform();
         }*/
     }
-    public void recursiveChildTransform()
+    @Override
+    public void recursiveChildTransform( Transformation transformation )
     {
-        transform( parent.getGlobalTransformation() );
+        transform( transformation );
         if ( children == null )
         {   // we're done if there are no children here
             return;
         }
+        Transformation trans = new Transformation( globalOrientation,
+                    globalPosition, globalScale );
         for (ITransformationNode child : children)
         {   // recurse into each child node and apply transformations if necessary
-            child.recursiveChildTransform();
+            child.recursiveChildTransform( trans );
+        }
+    }
+    
+    @Override
+    public OctreeNode toOctree( AABB sceneExtents )
+    {
+        OctreeNode result = new OctreeNode( sceneExtents );
+        if (entity != null && entity instanceof ICollidable)
+        {
+            ICollidable c = (ICollidable)entity;
+            result.addEntity(c);
+        }
+        if (children == null)
+        {
+            return result;
+        }
+        for (ITransformationNode n : children)
+        {
+            n.toOctree( result );
+        }
+        result.trySubdivide(16);
+        return result;
+    }
+    @Override
+    public void toOctree(OctreeNode node)
+    {
+        if (entity != null && entity instanceof ICollidable)
+        {
+            ICollidable c = (ICollidable)entity;
+            node.addEntity(c);
+        }
+        if (children == null)
+        {
+            return;
+        }
+        for (ITransformationNode n : children)
+        {
+            n.toOctree( node );
         }
     }
 }

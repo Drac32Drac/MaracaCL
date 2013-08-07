@@ -21,6 +21,7 @@ import org.lwjgl.*;
 
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL12.*;
+import org.lwjgl.util.glu.GLU;
 import static org.lwjgl.util.glu.GLU.*;
 import org.maracacl.render.*;
 import org.maracacl.util.FrameTimer;
@@ -36,7 +37,7 @@ public class TransformationTest
     
     float camFarDistance = 20.0f;
     float camNearDistance = 0.1f;
-    float FoV = 40.0f;
+    float FoV = 45.0f;
     float AspectRatio = 800f/600f;
     
     FloatBuffer lightPosition = floatBuffer(5.0f, 5.0f, -5.0f, 0.0f);
@@ -87,7 +88,9 @@ public class TransformationTest
     
     Mesh pyramidMesh = Mesh.MakePyramid();
     
-    TransformationNode nodes;;
+    TransformationNode nodes;
+    
+    OctreeNode octreeRoot;
     
     float pyramidPosX = 0f;
     float pyramidPosY = 0f;
@@ -111,12 +114,6 @@ public class TransformationTest
 	    e.printStackTrace();
 	    System.exit(0);
 	}
-        
-	// init OpenGL
-	/* GL11.glMatrixMode(GL11.GL_PROJECTION);
-	GL11.glLoadIdentity();
-	GL11.glOrtho(0, 800, 0, 600, 1, -1);
-	GL11.glMatrixMode(GL11.GL_MODELVIEW); */
         
         init();
         
@@ -173,8 +170,8 @@ public class TransformationTest
         glEnable(GL_LIGHTING);
         glEnable(GL_LIGHT0);
         glEnable(GL_LIGHT1);
-        glEnable(GL_LIGHT2);
-        glEnable(GL_LIGHT3);
+        // glEnable(GL_LIGHT2);
+        // glEnable(GL_LIGHT3);
         glShadeModel(GL_SMOOTH);
         
         glMaterial(GL_FRONT, GL_SPECULAR, floatBuffer(0.9f, 0.9f, 0.9f, 1.0f) );
@@ -190,7 +187,7 @@ public class TransformationTest
         glLightf(GL_LIGHT1, GL_CONSTANT_ATTENUATION, 1f);
         glLightf(GL_LIGHT1, GL_LINEAR_ATTENUATION, 0.15f);
         glLightf(GL_LIGHT1, GL_QUADRATIC_ATTENUATION, 0.01f);
-        
+        /*
         redLight = new PointLight(GL_LIGHT2);
         redLight.setDiffuse( new Vector4( 2f, 0.25f, 0.25f, 1.0f) );
         redLight.setSpecular( new Vector4(2f, 1.0f, 1.0f, 1.0f) );
@@ -208,7 +205,7 @@ public class TransformationTest
         glLightf(GL_LIGHT3, GL_CONSTANT_ATTENUATION, 1f);
         glLightf(GL_LIGHT3, GL_LINEAR_ATTENUATION, 0.15f);
         glLightf(GL_LIGHT3, GL_QUADRATIC_ATTENUATION, 0.01f);
-        
+        */
         glLight(GL_LIGHT0, GL_AMBIENT, floatBuffer(0.025f, 0.025f, 0.025f, 1.0f));
         
         
@@ -219,65 +216,94 @@ public class TransformationTest
         glFogf(GL_FOG_END, camFarDistance);
         glHint (GL_FOG_HINT, GL_NICEST);
         
-        nodes = generateNodeBox(15, 15, 15);
+        pyramidVBO = pyramidMesh.toVBOIBO();
+        
+        nodes = new TransformationNode(null);
+        
+        ITransformationNode node = generateNodeBox(10, 5, 5);
+        node.setParent(nodes);
+        node = generateNodeBox(10, 5, 5);
+        node.setParent(nodes);
     }
     
     public void TransformScene()
     {
         step += fTimer.getDelta() * 0.5f;
-        rtri = step * 15f;
+        rtri = step * 25f;
         
         pyramidPosX = (float)Math.sin(step) * 1.5f;
         pyramidPosY = -(float)Math.cos(step*0.5f) * 1.5f;
-        pyramidScale = 1.0f + (float)Math.sin(step * 0.25f) * 0.5f;
+        pyramidScale = 1.0f + (float)Math.sin(step * 0.5f) * 0.5f;
 
         Vector3 nodesPos = new Vector3(pyramidPosX, pyramidPosY, -9.0f);
         float nodesScale = pyramidScale * 0.5f;
         Quaternion nodesOrientation = new AxisAngle(
                 1.0f, 1.0f, 1.0f, rtri).toQuaternion();
         
-        nodes.setLocalOrientation(nodesOrientation);
-        nodes.setLocalPosition(nodesPos);
-        nodes.setLocalScale(nodesScale);
+        nodes.getChildren().get(0).setLocalOrientation(nodesOrientation);
+        nodes.getChildren().get(0).setLocalPosition(nodesPos);
+        nodes.getChildren().get(0).setLocalScale(nodesScale);
+        
+        nodes.getChildren().get(1).setLocalOrientation( new Quaternion( 
+                nodesOrientation.x, -nodesOrientation.y, -nodesOrientation.z,
+                nodesOrientation.w ) );
+        nodes.getChildren().get(1).setLocalPosition(
+                new Vector3( -nodesPos.x, -nodesPos.y, nodesPos.z) );
+        nodes.getChildren().get(1).setLocalScale(nodesScale);
+        
         nodes.recursiveTransform();
+        
+        octreeRoot = nodes.toOctree( new AABB(
+                new Vector3(0.0f, 0.0f, 0.0f), new Vector3(100f, 100f, 100f) ) );
     }
 
     public void DrawGLScene()
     {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        
+        org.lwjgl.util.glu.Sphere sphere = new org.lwjgl.util.glu.Sphere();
+        sphere.setDrawStyle(GLU.GLU_LINE);
         light.applyState();
-        redLight.applyState();
-        blueLight.applyState();
+        // redLight.applyState();
+        // blueLight.applyState();
+        
+        octreeRoot.draw();
         
         List<ITransformationNode> children = nodes.getChildren();
         
         pyramidVBO.applyState();
         
-        for ( ITransformationNode node : children )
+        for ( ITransformationNode group : children )
         {
-            IRenderable drawable = (IRenderable)node.getEntity();
-            Sphere volume = (Sphere)drawable.getBoundingVolume();
-            volume = new Sphere( volume.center.add( drawable.getGlobalPosition() ),
-                    volume.radius * drawable.getGlobalScale() );
-            if ( volume.distanceFrom(nearPlane) >= 0.0f
-                    && volume.distanceFrom(farPlane) >= 0.0f
-                    && volume.distanceFrom(leftPlane) >= 0.0f
-                    && volume.distanceFrom(rightPlane) >= 0.0f
-                    && volume.distanceFrom(topPlane) >= 0.0f
-                    && volume.distanceFrom(bottomPlane) >= 0.0f)
+            List<ITransformationNode> box = group.getChildren();
+            for ( ITransformationNode node : box )
             {
-                drawable.applyTransformation();
-                drawable.applyStatePrototype();
-                drawable.draw();
+                IRenderable drawable = (IRenderable)node.getEntity();
+                Sphere volume = (Sphere)drawable.getBoundingVolume();
+                glLoadIdentity();
+                /* List<ICollidable> collisions =
+                        octreeRoot.recursiveFindCollisions(drawable);
+                if ( collisions.size() > 0 )
+                    volume.draw(); */
+                if ( octreeRoot.recursiveHasCollisions(drawable) )
+                    volume.draw();
+                
+                if ( volume.distanceFrom(nearPlane) >= 0.0f
+                        && volume.distanceFrom(farPlane) >= 0.0f
+                        && volume.distanceFrom(leftPlane) >= 0.0f
+                        && volume.distanceFrom(rightPlane) >= 0.0f
+                        && volume.distanceFrom(topPlane) >= 0.0f
+                        && volume.distanceFrom(bottomPlane) >= 0.0f)
+                {
+                    drawable.applyTransformation();
+                    drawable.applyStatePrototype();
+                    drawable.draw();
+                }
             }
         }
     }
     
     public TransformationNode generateNodeBox(int rows, int collumns, int sheets)
     {
-        pyramidVBO = pyramidMesh.toVBOIBO();
-        
         TransformationNode result = new TransformationNode(null);
         IBoundingVolume sphere = pyramidMesh.generateBoundingSphere();
         float firstRow = -((float)rows - (float)rows/2.0f);
@@ -290,9 +316,10 @@ public class TransformationTest
                 for (int sheet = 0; sheet < sheets; sheet++)
                 {
                     TransformationNode element = new TransformationNode(result);
+                    element.setLocalOrientation(Quaternion.Identity);
                     element.setLocalPosition(row + firstRow, collumn + firstCollumn,
                             sheet + firstSheet);
-                    element.setLocalScale(0.25f);
+                    element.setLocalScale(0.125f);
                     VBOEntity entity = new VBOEntity(pyramidVBO.vbo, pyramidVBO.ibo);
                     // VBOEntity entity = new VBOEntity(cubeVBO, cubeIBO);
                     // InstancedMeshEntity entity = new InstancedMeshEntity(pyramidMesh);

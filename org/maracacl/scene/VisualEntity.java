@@ -18,16 +18,19 @@ import org.maracacl.interfaces.StatePrototype;
 import org.maracacl.interfaces.IRenderable;
 import org.maracacl.interfaces.IBoundingVolume;
 import static org.lwjgl.opengl.GL11.*;
+import org.maracacl.interfaces.ICollidable;
 import org.maracacl.interfaces.ITransformationNode;
 
 /*************************** VisualEntityCL **************************
  *
  */
-public class VisualEntity implements ITransformable, IRenderable
+public class VisualEntity implements ITransformable, IRenderable, ICollidable
 {
     ITransformationNode     transformNode;
     StatePrototype          renderStatePrototype;
     IBoundingVolume         boundingVolume;
+
+    private IBoundingVolume cachedTransformedBV;
     
     public VisualEntity( )
     {
@@ -50,6 +53,12 @@ public class VisualEntity implements ITransformable, IRenderable
     public ITransformationNode getTransformationNode()
     {
         return transformNode;
+    }
+    
+    @Override
+    public void               updateTransformation( Transformation transformation)
+    {
+        cachedTransformedBV = boundingVolume.getTransformed(transformation);
     }
     
     @Override
@@ -131,7 +140,6 @@ public class VisualEntity implements ITransformable, IRenderable
         glRotatef(rotation.angle, rotation.axis.x, rotation.axis.y, rotation.axis.z);
     }
     
-    
     /*********************** IRenderable methods *******************/
     @Override
     public void             setBoundingVolume(IBoundingVolume volume)
@@ -141,7 +149,7 @@ public class VisualEntity implements ITransformable, IRenderable
     @Override
     public IBoundingVolume  getBoundingVolume()
     {
-        return boundingVolume;
+        return cachedTransformedBV;
     }
     
     @Override

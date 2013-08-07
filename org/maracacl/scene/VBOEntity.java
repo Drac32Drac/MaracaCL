@@ -14,6 +14,7 @@ import org.maracacl.geometry.Vertex;
 import org.maracacl.geometry.Face;
 import java.util.*;
 import static org.lwjgl.opengl.GL11.*;
+import org.maracacl.interfaces.ICollidable;
 import org.maracacl.render.*;
 
 /*************************** VBOEntityCL **************************
