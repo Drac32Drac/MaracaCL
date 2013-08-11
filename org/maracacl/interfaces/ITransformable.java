@@ -44,4 +44,5 @@ public interface ITransformable
     public void             setScale(float scale);
     
     public void             applyTransformation();
+    public void             undoTransformation();
 }

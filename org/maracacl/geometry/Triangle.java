@@ -45,4 +45,18 @@ public class Triangle extends Face
         result[2] = Vector3.subtract( vertices[2].position, vertices[1].position );
         return result;
     }
+    
+    public float getArea()
+    {
+        Vector3 cross1 = vertices[0].position.subtract( vertices[1].position );
+        Vector3 cross2 = vertices[0].position.subtract( vertices[2].position );
+        return Vector3.cross(cross1, cross2).length() * 0.5f;
+    }
+    
+    public static float getArea( Vector3 point1, Vector3 point2, Vector3 point3 )
+    {
+        Vector3 cross1 = point1.subtract( point2 );
+        Vector3 cross2 = point1.subtract( point3 );
+        return Vector3.cross(cross1, cross2).length() * 0.5f;
+    }
 }

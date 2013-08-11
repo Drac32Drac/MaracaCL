@@ -129,15 +129,22 @@ public class VisualEntity implements ITransformable, IRenderable, ICollidable
     @Override
     public void                 applyTransformation()
     {
+        glPushMatrix();
         Transformation transform = transformNode.getGlobalTransformation();
 
         AxisAngle rotation = transform.orientation.toAxisAngle();
         
-        glLoadIdentity();
+        // glLoadIdentity();
         glTranslatef(transform.translation.x,
                 transform.translation.y, transform.translation.z);
         glScalef(transform.scale, transform.scale, transform.scale);
         glRotatef(rotation.angle, rotation.axis.x, rotation.axis.y, rotation.axis.z);
+    }
+    
+    @Override
+    public void                 undoTransformation()
+    {
+        glPopMatrix();
     }
     
     /*********************** IRenderable methods *******************/

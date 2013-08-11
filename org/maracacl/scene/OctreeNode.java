@@ -212,7 +212,7 @@ public class OctreeNode
     {
         if ( containedEntities.size() > 0 )
         {
-            BoundingVolume.draw( new Vector4(0.9f, 0.9f, 0.9f, 0.5f) );
+            BoundingVolume.draw( );
         }
         if (containedNodes == null)
         {
@@ -449,7 +449,7 @@ public class OctreeNode
     {
         for ( ICollidable c : containedEntities )
         {
-            if ( c == collidable || c.getBoundingVolume().intersects(volume) )
+            if ( c == collidable || !c.getBoundingVolume().intersects(volume) )
             {
                 continue;
             }
@@ -497,7 +497,7 @@ public class OctreeNode
                         continue;
                     } else
                     {
-                        recursiveFindCollisions( collidable, volume, result );
+                        containedNodes[i].recursiveFindCollisions( collidable, volume, result );
                     }
                 }
             }

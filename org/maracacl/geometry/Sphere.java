@@ -8,9 +8,7 @@
 
 package org.maracacl.geometry;
 
-import static org.lwjgl.opengl.GL11.glLoadIdentity;
-import static org.lwjgl.opengl.GL11.glRotatef;
-import static org.lwjgl.opengl.GL11.glTranslatef;
+import static org.lwjgl.opengl.GL11.*;
 import org.lwjgl.util.glu.GLU;
 import org.maracacl.geometry.vector.AxisAngle;
 import org.maracacl.geometry.vector.Quaternion;
@@ -37,11 +35,13 @@ public class Sphere implements IBoundingVolume
     @Override
     public void draw()
     {
-        glLoadIdentity();
+        // glLoadIdentity();
+        glPushMatrix();
         glu_sphere.setDrawStyle(GLU.GLU_LINE);
         glTranslatef(center.x, center.y, center.z);
         // glRotatef( 90.0f, 1.0f, 0.0f, 0.0f);
         glu_sphere.draw(radius, 6, 4);
+        glPopMatrix();
         // glRotatef( -90.0f, 1.0f, 0.0f, 0.0f);
         // glTranslatef(-center.x, -center.y, -center.z);
     }
@@ -51,48 +51,32 @@ public class Sphere implements IBoundingVolume
     public boolean intersects(Sphere otherSphere)
     {
         Vector3 distance = otherSphere.center.subtract(center);
-        float length = distance.length();
-        if (length >= radius + otherSphere.radius)
-            return false;
-        return true;
+        float length = distance.lengthSquared();
+        return ( length <= radius * radius +
+                otherSphere.radius * otherSphere.radius );
     }
     @Override
     public boolean intersects( AABB aabb )
     {
         Vector3 max = aabb.getMaxCorner();
-        float aabbRadius = max.subtract(aabb.CenterPoint).length();
-        if ( aabb.CenterPoint.subtract(center).length() >
+        float aabbRadius = max.subtract(aabb.CenterPoint).lengthSquared();
+        if ( aabb.CenterPoint.subtract(center).lengthSquared() <=
                 radius + aabbRadius )
         {
-            return false;
+            Vector3 min = aabb.getMinCorner();
+
+            Plane test1 = new Plane(max, Vector3.Right);
+            Plane test2 = new Plane(min, Vector3.Left);
+            Plane test3 = new Plane(max, Vector3.Back);
+            Plane test4 = new Plane(min, Vector3.Front);
+            Plane test5 = new Plane(max, Vector3.Up);
+            Plane test6 = new Plane(min, Vector3.Down);
+
+            return ( (distanceFrom(test1) <= 0.0f) && (distanceFrom(test2) <= 0.0f) &&
+                    (distanceFrom(test3) <= 0.0f) && (distanceFrom(test4) <= 0.0f) && 
+                    (distanceFrom(test5) <= 0.0f) && (distanceFrom(test6) <= 0.0f) );
         }
-        Vector3 min = aabb.getMinCorner();
-        
-        // right and left planes
-        Plane test = new Plane(max, Vector3.Right);
-        if ( distanceFrom(test) > 0.0f )
-            return false;
-        test = new Plane(min, Vector3.Left);
-        if ( distanceFrom(test) > 0.0f )
-            return false;
-        
-        // back and front planes
-        test = new Plane(max, Vector3.Back);
-        if ( distanceFrom(test) > 0.0f )
-            return false;
-        test = new Plane(min, Vector3.Front);
-        if ( distanceFrom(test) > 0.0f )
-            return false;
-        
-        // top and bottom planes
-        test = new Plane(max, Vector3.Up);
-        if ( distanceFrom(test) > 0.0f )
-            return false;
-        test = new Plane(min, Vector3.Down);
-        if ( distanceFrom(test) > 0.0f )
-            return false;
-        
-        return true;
+        return false;
     }
     @Override
     public boolean intersects(Plane plane)
@@ -108,18 +92,7 @@ public class Sphere implements IBoundingVolume
     @Override
     public boolean intersects(IBoundingVolume volume)
     {
-        if (volume instanceof Sphere)
-        {
-            return intersects( (Sphere)volume );
-        }
-        else if (volume instanceof AABB)
-        {
-            return intersects( (AABB)volume );
-        } else
-        {
-            throw new UnsupportedOperationException(
-                    "Bounding volume cannot be evaluated from intersects method.");
-        }
+        return volume.intersects(this);
     }
     
     /*************************** Containment Tests ***************************/
@@ -174,8 +147,9 @@ public class Sphere implements IBoundingVolume
     @Override
     public float distanceFrom(Plane plane)
     {
-        float originDistance = plane.distanceFrom(Vector3.Zero);
-        float distance = Vector3.dot(plane.normal, center.subtract(plane.point));
+        float distance = plane.distanceFrom(center);
+        // float originDistance = plane.distanceFrom(Vector3.Zero);
+        // float distance = Vector3.dot(plane.normal, center.subtract(plane.point));
         if ( Math.abs(distance) <= radius)
             return 0;
         else if (distance < 0.0f)

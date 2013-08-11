@@ -97,7 +97,7 @@ public final class Vector3
     {
         return new Vector3( left.y * right.z - left.z * right.y,
                               left.z * right.x - left.x * right.z,
-                              left.x * right.y - left.y * right.z);
+                              left.x * right.y - left.y * right.x);
     }
     
     public Vector3 rotate( Quaternion rotation )

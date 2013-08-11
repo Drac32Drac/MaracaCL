@@ -400,6 +400,13 @@ public final class TransformationNode implements ITransformationNode
                 globalOrientation = localOrientation;
                 globalPosition = localPosition;
                 globalScale = localScale;
+                isGlobalValid = true;
+        
+                if ( entity != null )
+                {
+                    entity.updateTransformation( new Transformation(globalOrientation,
+                            globalPosition, globalScale) );
+                }
             } else
             {   // transform non-root nodes using parent's global transforms
                 transform( parent.getGlobalTransformation() );
@@ -407,10 +414,11 @@ public final class TransformationNode implements ITransformationNode
                 //        parent.getGlobalPosition(), parent.getGlobalScale() );
             }
         }
-        
-        RecursiveTransformTask task = new RecursiveTransformTask( this, 0, children.size() );
-        StaticResources.pool.invoke(task);
-        
+        if ( children != null )
+        {
+            RecursiveTransformTask task = new RecursiveTransformTask( this, 0, children.size() );
+            StaticResources.pool.invoke(task);
+        }
         /*
         if ( children == null )
         {   // we're done if there are no children here

@@ -45,6 +45,8 @@ public class TransformationTest
     
     FrameTimer fTimer = new FrameTimer(8);
     
+    Frustum testFrustum = new Frustum(camNearDistance, camFarDistance, FoV, AspectRatio);
+    
     PointLight light;
     PointLight redLight;
     PointLight blueLight;
@@ -145,7 +147,7 @@ public class TransformationTest
         glViewport(0, 0, width, height);    
         glMatrixMode(GL_PROJECTION);                 
         glLoadIdentity();                                    
-        gluPerspective(FoV, width / height,
+        gluPerspective(FoV, AspectRatio, // width / height,
                 camNearDistance, camFarDistance);  
         glMatrixMode(GL_MODELVIEW);                  
         glLoadIdentity();                        
@@ -220,9 +222,9 @@ public class TransformationTest
         
         nodes = new TransformationNode(null);
         
-        ITransformationNode node = generateNodeBox(5, 10, 5);
+        ITransformationNode node = generateNodeBox(5, 5, 5);
         node.setParent(nodes);
-        node = generateNodeBox(5, 10, 5);
+        node = generateNodeBox(5, 5, 5);
         node.setParent(nodes);
     }
     
@@ -260,44 +262,42 @@ public class TransformationTest
     public void DrawGLScene()
     {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        org.lwjgl.util.glu.Sphere sphere = new org.lwjgl.util.glu.Sphere();
-        sphere.setDrawStyle(GLU.GLU_LINE);
+        // org.lwjgl.util.glu.Sphere sphere = new org.lwjgl.util.glu.Sphere();
+        // sphere.setDrawStyle(GLU.GLU_LINE);
         light.applyState();
         // redLight.applyState();
         // blueLight.applyState();
+        glLoadIdentity();
+        glColor4f(0.0f, 1.0f, 1.0f, 1.0f);
         
-        octreeRoot.draw();
+        TransformationNode newNode = new TransformationNode( null );
+        VisualEntity cam = new VisualEntity();
+        cam.setTransformationNode(newNode);
+        cam.setBoundingVolume(testFrustum);
+        newNode.recursiveTransform();
+        Frustum newFrustum = (Frustum)cam.getBoundingVolume();
         
-        List<ITransformationNode> children = nodes.getChildren();
+        newFrustum.draw();
+        // testFrustum.draw();
+        
+        List<ICollidable> hits = octreeRoot.recursiveFindCollisions(cam);
+
+        // octreeRoot.draw();
         
         pyramidVBO.applyState();
         
-        for ( ITransformationNode group : children )
+        for (ICollidable c : hits)
         {
-            List<ITransformationNode> box = group.getChildren();
-            for ( ITransformationNode node : box )
+            if ( c instanceof IRenderable )
             {
-                IRenderable drawable = (IRenderable)node.getEntity();
-                Sphere volume = (Sphere)drawable.getBoundingVolume();
-                glLoadIdentity();
-                /* List<ICollidable> collisions =
-                        octreeRoot.recursiveFindCollisions(drawable);
-                if ( collisions.size() > 0 )
-                    volume.draw(); */
-                if ( octreeRoot.recursiveHasCollisions(drawable) )
-                    volume.draw();
-                
-                if ( volume.distanceFrom(nearPlane) >= 0.0f
-                        && volume.distanceFrom(farPlane) >= 0.0f
-                        && volume.distanceFrom(leftPlane) >= 0.0f
-                        && volume.distanceFrom(rightPlane) >= 0.0f
-                        && volume.distanceFrom(topPlane) >= 0.0f
-                        && volume.distanceFrom(bottomPlane) >= 0.0f)
-                {
-                    drawable.applyTransformation();
-                    drawable.applyStatePrototype();
-                    drawable.draw();
-                }
+                IRenderable drawable = (IRenderable)c;
+                drawable.applyStatePrototype();
+                IBoundingVolume volume = drawable.getBoundingVolume();
+                // if ( octreeRoot.recursiveHasCollisions(drawable) )
+                //     volume.draw( );
+                drawable.applyTransformation();
+                drawable.draw();
+                drawable.undoTransformation();
             }
         }
     }
@@ -305,10 +305,14 @@ public class TransformationTest
     public TransformationNode generateNodeBox(int rows, int collumns, int sheets)
     {
         TransformationNode result = new TransformationNode(null);
-        IBoundingVolume sphere = pyramidMesh.generateBoundingSphere();
+        
+        IBoundingVolume volume1 = pyramidMesh.generateBoundingSphere();
+        IBoundingVolume volume2 = pyramidMesh.generateAABB();
+        
         float firstRow = -((float)rows - (float)rows/2.0f);
         float firstCollumn = -((float)collumns - (float)collumns/2.0f);
         float firstSheet = -((float)sheets - (float)sheets/2.0f);
+        
         for (int row = 0; row < rows; row++)
         {
             for (int collumn = 0; collumn < collumns; collumn++ )
@@ -323,7 +327,13 @@ public class TransformationTest
                     VBOEntity entity = new VBOEntity(pyramidVBO.vbo, pyramidVBO.ibo);
                     // VBOEntity entity = new VBOEntity(cubeVBO, cubeIBO);
                     // InstancedMeshEntity entity = new InstancedMeshEntity(pyramidMesh);
-                    entity.setBoundingVolume(sphere);
+                    if ( (row + collumn + sheet) % 2 == 0 )
+                    {
+                        entity.setBoundingVolume(volume1);
+                    } else {
+                        entity.setBoundingVolume(volume2);
+                    }
+                    
                     entity.setTransformationNode(element);
                     int mod = (row + collumn + sheet) % 10;
                     switch (mod)
